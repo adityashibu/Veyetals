@@ -6,6 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
+# Exe and obj files
+*.exe
+*.obj
+
+# VS project files
+*.vs/
+
 # Distribution / packaging
 .Python
 build/
