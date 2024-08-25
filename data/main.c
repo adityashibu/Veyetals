@@ -130,6 +130,7 @@ int main()
         get_cpu_usage();
         get_gpu_usage();
         Sleep(1000);
+        printf("--------------------------------------------\n");
     }
     return 0;
 }
