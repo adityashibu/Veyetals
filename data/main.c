@@ -6,6 +6,7 @@
 #endif
 
 #include <stdio.h>
+#include <nvml.h>
 
 void get_memory_usage()
 {
@@ -65,12 +66,69 @@ void get_cpu_usage()
     }
 }
 
+void get_gpu_usage()
+{
+    nvmlReturn_t result;
+    nvmlDevice_t device;
+
+    result = nvmlInit();
+    if (result != NVML_SUCCESS)
+    {
+        printf("Failed to initialize NVML: %s\n", nvmlErrorString(result));
+        return;
+    }
+
+    result = nvmlDeviceGetHandleByIndex_v2(0, &device);
+    if (result != NVML_SUCCESS)
+    {
+        printf("Failed to get handle for device: %s\n", nvmlErrorString(result));
+        nvmlShutdown();
+        return;
+    }
+
+    char name[NVML_DEVICE_NAME_BUFFER_SIZE];
+    result = nvmlDeviceGetName(device, name, sizeof(name));
+    if (result != NVML_SUCCESS)
+    {
+        printf("Failed to get GPU Name: %s\n", nvmlErrorString(result));
+        nvmlShutdown();
+        return;
+    }
+
+    printf("GPU Name: %s\n", name);
+
+    nvmlUtilization_t utilization;
+    result = nvmlDeviceGetUtilizationRates(device, &utilization);
+    if (result != NVML_SUCCESS)
+    {
+        printf("Failed to get GPU utilization rates: %s\n", nvmlErrorString(result));
+    }
+    else
+    {
+        printf("GPU Usage: %u%%\n", utilization.gpu);
+    }
+
+    nvmlMemory_t memory;
+    result = nvmlDeviceGetMemoryInfo(device, &memory);
+    if (result != NVML_SUCCESS)
+    {
+        printf("Failed to get GPU memory info: %s\n", nvmlErrorString(result));
+    }
+    else
+    {
+        printf("GPU Memory Usage: %llu MB / %llu MB\n", memory.used / (1024 * 1024), memory.total / (1024 * 1024));
+    }
+
+    nvmlShutdown();
+}
+
 int main()
 {
     while (1)
     {
         get_memory_usage();
         get_cpu_usage();
+        get_gpu_usage();
         Sleep(1000);
     }
     return 0;
