@@ -127,7 +127,7 @@ void get_gpu_usage()
     }
     else
     {
-        printf("GPU Temperature: %u °C\n", temp);
+        printf("GPU Temperature: %u C\n", temp);
     }
 
     nvmlShutdown();
