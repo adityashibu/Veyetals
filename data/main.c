@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <nvml.h>
+#include <time.h>
 
 void get_memory_usage()
 {
@@ -133,10 +134,29 @@ void get_gpu_usage()
     nvmlShutdown();
 }
 
+void get_current_time()
+{
+    time_t t;
+    struct tm *tm_info;
+
+    time(&t);
+    tm_info = localtime(&t);
+
+    char day_buffer[10];
+    char date_buffer[26];
+
+    strftime(day_buffer, 10, "%A", tm_info);
+    strftime(date_buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+
+    printf("Day: %s\n", day_buffer);
+    printf("Date and Time: %s\n", date_buffer);
+}
+
 int main()
 {
     while (1)
     {
+        get_current_time();
         get_memory_usage();
         get_cpu_usage();
         get_gpu_usage();
