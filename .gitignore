@@ -12,6 +12,7 @@ __pycache__/
 
 # VS project files
 *.vs/
+*.vscode/
 
 # Distribution / packaging
 .Python

@@ -70,6 +70,8 @@ void get_gpu_usage()
 {
     nvmlReturn_t result;
     nvmlDevice_t device;
+    unsigned int temp;
+    char name[NVML_DEVICE_NAME_BUFFER_SIZE];
 
     result = nvmlInit();
     if (result != NVML_SUCCESS)
@@ -86,7 +88,6 @@ void get_gpu_usage()
         return;
     }
 
-    char name[NVML_DEVICE_NAME_BUFFER_SIZE];
     result = nvmlDeviceGetName(device, name, sizeof(name));
     if (result != NVML_SUCCESS)
     {
@@ -119,6 +120,16 @@ void get_gpu_usage()
         printf("GPU Memory Usage: %llu MB / %llu MB\n", memory.used / (1024 * 1024), memory.total / (1024 * 1024));
     }
 
+    result = nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, &temp);
+    if (result != NVML_SUCCESS)
+    {
+        printf("Failed to get GPU Temperatures: %s\n", nvmlErrorString(result));
+    }
+    else
+    {
+        printf("GPU Temperature: %u °C\n", temp);
+    }
+
     nvmlShutdown();
 }
 
@@ -134,3 +145,6 @@ int main()
     }
     return 0;
 }
+
+// cl /Fe:main.exe main.c /I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include" /link /MACHINE:x64 /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib\x64" nvml.lib
+// main.exe
