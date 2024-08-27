@@ -3,6 +3,7 @@
 #include <Psapi.h>
 #elif __linux__
 #include <unistd.h>
+#include <wbemidl.h>
 #endif
 
 #include <stdio.h>
@@ -156,7 +157,7 @@ void get_cpu_temperature()
         hr = pclsObj->Get(L"Temperature", 0, &vtProp, 0, 0);
         if (SUCCEEDED(hr))
         {
-            printf("CPU Temperature: %.1f °C\n", (vtProp.intVal - 273.15));
+            printf("CPU Temperature: %.1f °C\n", vtProp.dblVal - 273.15);
         }
         VariantClear(&vtProp);
         pclsObj->Release();
@@ -271,4 +272,9 @@ int main()
 }
 
 // cl /Fe:main.exe main.c /I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include" /link /MACHINE:x64 /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib\x64" nvml.lib
+
+/* Run this one for cpu temperature testing
+ cl /Fe:main.exe main.c /I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include" /link /MACHINE:x64 /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib\x64" nvml.lib wbemuuid.lib
+*/
+
 // main.exe
