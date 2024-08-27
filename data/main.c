@@ -67,6 +67,108 @@ void get_cpu_usage()
     }
 }
 
+void get_cpu_temperature()
+{
+    HRESULT hres;
+    IWbemLocator *pLoc = NULL;
+    IWbemServices *pSvc = NULL;
+
+    hres = CoInitializeEx(0, COINIT_MULTITHREADED);
+    if (FAILED(hres))
+    {
+        printf("Failed to initialize COM library. Error code = 0x%X\n", hres);
+        return;
+    }
+
+    hres = CoInitializeSecurity(NULL, -1, NULL, NULL,
+                                RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE,
+                                NULL, EOAC_NONE, NULL);
+    if (FAILED(hres))
+    {
+        printf("Failed to initialize security. Error code = 0x%X\n", hres);
+        CoUninitialize();
+        return;
+    }
+
+    hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, IID_IWbemLocator, (LPVOID *)&pLoc);
+    if (FAILED(hres))
+    {
+        printf("Failed to create IWbemLocator object. Error code = 0x%X\n", hres);
+        CoUninitialize();
+        return;
+    }
+
+    hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"),
+                               NULL, NULL, 0, NULL, 0, 0, &pSvc);
+    if (FAILED(hres))
+    {
+        printf("Could not connect. Error code = 0x%X\n", hres);
+        pLoc->Release();
+        CoUninitialize();
+        return;
+    }
+
+    hres = CoSetProxyBlanket(pSvc,
+                             RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL,
+                             RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE,
+                             NULL, EOAC_NONE);
+
+    if (FAILED(hres))
+    {
+        printf("Could not set proxy blanket. Error code = 0x%X\n", hres);
+        pSvc->Release();
+        pLoc->Release();
+        CoUninitialize();
+        return;
+    }
+
+    IEnumWbemClassObject *pEnumerator = NULL;
+    hres = pSvc->ExecQuery(
+        bstr_t("WQL"),
+        bstr_t("SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation"),
+        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+        NULL,
+        &pEnumerator);
+
+    if (FAILED(hres))
+    {
+        printf("Query for CPU temperature failed. Error code = 0x%X\n", hres);
+        pSvc->Release();
+        pLoc->Release();
+        CoUninitialize();
+        return;
+    }
+
+    IWbemClassObject *pclsObj = NULL;
+    ULONG uReturn = 0;
+
+    while (pEnumerator)
+    {
+        HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
+
+        if (0 == uReturn)
+        {
+            break;
+        }
+
+        VARIANT vtProp;
+
+        hr = pclsObj->Get(L"Temperature", 0, &vtProp, 0, 0);
+        if (SUCCEEDED(hr))
+        {
+            printf("CPU Temperature: %.1f °C\n", (vtProp.intVal - 273.15));
+        }
+        VariantClear(&vtProp);
+        pclsObj->Release();
+    }
+
+    pSvc->Release();
+    pLoc->Release();
+    pEnumerator->Release();
+    CoUninitialize();
+}
+
+
 void get_gpu_usage()
 {
     nvmlReturn_t result;
@@ -160,6 +262,7 @@ int main()
         get_current_time();
         get_memory_usage();
         get_cpu_usage();
+        get_cpu_temperature();
         get_gpu_usage();
         Sleep(1000);
         printf("--------------------------------------------\n");
