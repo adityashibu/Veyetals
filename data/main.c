@@ -139,7 +139,7 @@ void get_gpu_usage()
     }
     else
     {
-        printf("GPU Power Usage: %u mW\n", power_usage);
+        printf("GPU Power Usage: %.2f W\n", (power_usage / 1000.0));
     }
 
     nvmlShutdown();
