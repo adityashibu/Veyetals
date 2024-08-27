@@ -126,7 +126,7 @@ void get_cpu_temperature()
     IEnumWbemClassObject *pEnumerator = NULL;
     hres = pSvc->ExecQuery(
         bstr_t("WQL"),
-        bstr_t("SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation"),
+        bstr_t("SELECT * FROM MSAcpi_ThermalZoneTemperature"),
         WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
         NULL,
         &pEnumerator);
@@ -154,10 +154,12 @@ void get_cpu_temperature()
 
         VARIANT vtProp;
 
-        hr = pclsObj->Get(L"Temperature", 0, &vtProp, 0, 0);
+        hr = pclsObj->Get(L"CurrentTemperature", 0, &vtProp, 0, 0);
         if (SUCCEEDED(hr))
         {
-            printf("CPU Temperature: %.1f °C\n", vtProp.dblVal - 273.15);
+            // Temperature is reported in tenths of Kelvin
+            double tempCelsius = (vtProp.uintVal / 10.0) - 273.15;
+            printf("CPU Temperature: %.1f °C\n", tempCelsius);
         }
         VariantClear(&vtProp);
         pclsObj->Release();
@@ -168,6 +170,7 @@ void get_cpu_temperature()
     pEnumerator->Release();
     CoUninitialize();
 }
+
 
 
 void get_gpu_usage()
