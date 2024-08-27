@@ -47,7 +47,7 @@ def run_executable():
                 
                 if output_line:
                     data = parse_output_line(output_line.strip(), data)
-                    print("Current Data: ", data)  # Real-time output handling
+                    print("Current Data: ", data)
 
                 if proc.poll() is not None:
                     break
