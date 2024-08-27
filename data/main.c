@@ -154,6 +154,7 @@ void get_current_time()
 
 int main()
 {
+    setbuf(stdout, NULL);
     while (1)
     {
         get_current_time();
