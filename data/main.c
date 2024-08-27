@@ -71,6 +71,7 @@ void get_gpu_usage()
 {
     nvmlReturn_t result;
     nvmlDevice_t device;
+    unsigned int power_usage;
     unsigned int temp;
     char name[NVML_DEVICE_NAME_BUFFER_SIZE];
 
@@ -129,6 +130,16 @@ void get_gpu_usage()
     else
     {
         printf("GPU Temperature: %u C\n", temp);
+    }
+
+    result = nvmlDeviceGetPowerUsage(device, &power_usage);
+    if (result != NVML_SUCCESS)
+    {
+        printf("Failed to get GPU Power Usage: %s\n", nvmlErrorString(result));
+    }
+    else
+    {
+        printf("GPU Power Usage: %u mW\n", power_usage);
     }
 
     nvmlShutdown();
