@@ -1,5 +1,10 @@
 import subprocess
 import os
+import asyncio
+from fastapi import FastAPI, WebSocket
+import json
+
+app = FastAPI()
 
 def parse_output_line(line, data):
     if line.startswith("Day:"):
@@ -28,18 +33,45 @@ def parse_output_line(line, data):
     
     return data
 
-def run_executable():
+# def run_executable():
+#     data = {}
+#     exe_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'main.exe')
+
+#     try:
+#         with subprocess.Popen(
+#             [exe_path], 
+#             stdout=subprocess.PIPE, 
+#             stderr=subprocess.PIPE, 
+#             bufsize=1, 
+#             universal_newlines=True, 
+#             text=True, 
+#             shell=True
+#         ) as proc:
+#             while True:
+#                 output_line = proc.stdout.readline()
+                
+#                 if output_line:
+#                     data = parse_output_line(output_line.strip(), data)
+#                     print("Current Data: ", data)
+
+#                 if proc.poll() is not None:
+#                     break
+
+#     except Exception as e:
+#         print("Exception occurred while running the executable: ", e)
+
+async def stream_data():
     data = {}
     exe_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'main.exe')
-
+    
     try:
         with subprocess.Popen(
-            [exe_path], 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
-            bufsize=1, 
-            universal_newlines=True, 
-            text=True, 
+            [exe_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=1,
+            universal_newlines=True,
+            text=True,
             shell=True
         ) as proc:
             while True:
@@ -47,13 +79,17 @@ def run_executable():
                 
                 if output_line:
                     data = parse_output_line(output_line.strip(), data)
-                    print("Current Data: ", data)
-
+                    yield data
+                    
                 if proc.poll() is not None:
                     break
-
+                
     except Exception as e:
         print("Exception occurred while running the executable: ", e)
-
-if __name__ == "__main__":
-    run_executable()
+ 
+@app.websocket("/ws/gpu-data")       
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    async for data in stream_data():
+        await websocket.send_text(json.dumps(data))
+    await websocket.close()

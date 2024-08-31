@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Monitoring Data</h2>
+    <pre id="gpuData"></pre>
+
+    <script>
+        const socket = new WebSocket("ws://127.0.0.1:8000/ws/gpu-data");
+
+        socket.onmessage = function(event) {
+            const gpuData = JSON.parse(event.data);
+            document.getElementById("gpuData").innerText = JSON.stringify(gpuData, null, 2);
+        };
+
+        socket.onclose = function(event) {
+            console.log("WebSocket closed:", event);
+        };
+    </script>
+</body>
+</html>
